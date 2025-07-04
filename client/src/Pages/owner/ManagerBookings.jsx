@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { dummyMyBookingsData } from '../../assets/assets'
-import { assets } from '../../assets/assets'
 import Title from '../../Components/Owner/Title'
+import { dummyMyBookingsData } from '../../assets/assets'
 
 const ManagerBookings = () => {
+  const currency = import.meta.env.VITE_CURRENCY
   const [bookings, setBookings] = useState([])
-  const currency = import.meta.env.VITE_CURRENCY || '₹' // fallback to ₹ if not set
 
+  // Simulated fetch function
   const fetchOwnerBookings = async () => {
     setBookings(dummyMyBookingsData)
   }
@@ -15,16 +15,23 @@ const ManagerBookings = () => {
     fetchOwnerBookings()
   }, [])
 
+  // Handle status dropdown change
+  const handleStatusChange = (index, newStatus) => {
+    const updatedBookings = [...bookings]
+    updatedBookings[index].status = newStatus
+    setBookings(updatedBookings)
+  }
+
   return (
     <div className='px-4 pt-10 md:px-10 w-full'>
       <Title
         title='Manage Bookings'
-        subTitle='Track all customer bookings, approve or cancel requests, and manage booking statuses'
+        subTitle='Track all customer bookings, approve or cancel requests, and manage booking statuses.'
       />
 
       <div className='max-w-3xl w-full rounded-md overflow-hidden border border-borderColor mt-6'>
         <table className='w-full border-collapse text-left text-sm text-gray-600'>
-          <thead className='bg-gray-50 text-gray-500'>
+          <thead className='text-gray-500'>
             <tr>
               <th className='p-3 font-medium'>Car</th>
               <th className='p-3 font-medium max-md:hidden'>Date Range</th>
@@ -35,53 +42,57 @@ const ManagerBookings = () => {
           </thead>
 
           <tbody>
-            {bookings.length === 0 ? (
-              <tr>
-                <td colSpan='5' className='p-4 text-center text-gray-400'>
-                  No bookings available
+            {bookings.map((booking, index) => (
+              <tr key={index} className='border-t border-borderColor text-gray-500'>
+                <td className='p-3 flex items-center gap-3'>
+                  <img
+                    src={booking.car.image}
+                    alt=''
+                    className='h-12 w-12 aspect-square rounded-md object-cover'
+                  />
+                  <p>{booking.car.brand} {booking.car.model}</p>
+                </td>
+
+                <td className='p-3 max-md:hidden'>
+                  {booking.pickUpDate ? booking.pickUpDate.split('T')[0] : 'N/A'} to{' '}
+                  {booking.returnDate ? booking.returnDate.split('T')[0] : 'N/A'}
+                </td>
+
+                <td className='p-3'>
+                  {currency} {booking.price}
+                </td>
+
+                <td className='p-3 max-md:hidden'>
+                  <span className='bg-gray-300 px-3 py-1 rounded-full text-xs'>
+                    {booking.paymentStatus || 'Offline'}
+                  </span>
+                </td>
+
+                <td className='p-3'>
+                  {booking.status === 'pending' ? (
+                    <select
+                      value={booking.status}
+                      onChange={(e) => handleStatusChange(index, e.target.value)}
+                      className='px-2 py-1.5 mt-1 text-gray-500 border border-borderColor rounded-md outline-none'
+                    >
+                      <option value='pending'>Pending</option>
+                      <option value='cancelled'>Cancelled</option>
+                      <option value='confirmed'>Confirmed</option>
+                    </select>
+                  ) : (
+                    <span
+                      className={`${
+                        booking.status === 'confirmed'
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-red-100 text-red-600'
+                      } px-3 py-1 rounded-full text-xs capitalize`}
+                    >
+                      {booking.status}
+                    </span>
+                  )}
                 </td>
               </tr>
-            ) : (
-              bookings.map((booking, index) => (
-                <tr key={index} className='border-t border-borderColor text-gray-600'>
-                  <td className='p-3 flex items-center gap-3'>
-                    <img
-                      src={booking.car?.image || assets.carIconColored}
-                      alt='car'
-                      className='w-12 h-12 aspect-square rounded-md object-cover'
-                    />
-                    <p className='font-medium max-md:hidden'>
-                      {booking.car?.brand || 'Unknown'} {booking.car?.model || ''}
-                    </p>
-                  </td>
-
-                  <td className='p-3 max-md:hidden'>
-                    {booking.dateRange?.start || 'N/A'} to {booking.dateRange?.end || 'N/A'}
-                  </td>
-
-                  <td className='p-3'>
-                    {currency}
-                    {booking.total || 0}
-                  </td>
-
-                  <td className='p-3 max-md:hidden'>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        booking.paymentStatus === 'Paid'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}
-                    >
-                      {booking.paymentStatus || 'Pending'}
-                    </span>
-                  </td>
-
-                  <td className='p-3'>
-                    <button className='text-blue-500 hover:underline'>View</button>
-                  </td>
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
       </div>
@@ -90,4 +101,6 @@ const ManagerBookings = () => {
 }
 
 export default ManagerBookings
+
+
 
